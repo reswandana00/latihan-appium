@@ -5,15 +5,26 @@ from selenium.webdriver.common.by import By
 class AutTest(unittest.TestCase):
 
     def setUp(self):
-        options = webdriver.FirefoxOptions()
+        server = "http://localhost:4444"
+
+        # Ambil parameter browser dari argumen ke-2
+        browser_name = sys.argv[2] if len(sys.argv) > 2 else "firefox"
+
+        if browser_name == "chrome":
+            options = webdriver.ChromeOptions()
+        elif browser_name == "edge":
+            options = webdriver.EdgeOptions()
+        else:
+            options = webdriver.FirefoxOptions()
+
         options.add_argument('--ignore-ssl-errors=yes')
         options.add_argument('--ignore-certificate-errors')
-        server = "http://localhost:4444"
 
         self.browser = webdriver.Remote(command_executor=server, options=options)
         self.addCleanup(self.browser.quit)
 
     def test_homepage(self):
+        # Argumen pertama: URL AUT
         if len(sys.argv) > 1:
             url = sys.argv[1]
         else:
@@ -21,10 +32,11 @@ class AutTest(unittest.TestCase):
 
         self.browser.get(url)
         self.browser.save_screenshot("screenshot.png")
+
         expected_result = "Welcome back, Guest!"
         actual_result = self.browser.find_element(By.TAG_NAME, 'p')
 
         self.assertIn(expected_result, actual_result.text)
 
 if __name__ == '__main__':
-    unittest.main(argv=['first-arg-is-ignored'], verbosity=2, warnings='ignore')
+    unittest.main(argv=['first-arg-is]()
