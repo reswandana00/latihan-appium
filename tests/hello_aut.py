@@ -6,8 +6,6 @@ class AutTest(unittest.TestCase):
 
     def setUp(self):
         server = "http://localhost:4444"
-
-        # Ambil parameter browser dari argumen ke-2
         browser_name = sys.argv[2] if len(sys.argv) > 2 else "firefox"
 
         if browser_name == "chrome":
@@ -24,11 +22,7 @@ class AutTest(unittest.TestCase):
         self.addCleanup(self.browser.quit)
 
     def test_homepage(self):
-        # Argumen pertama: URL AUT
-        if len(sys.argv) > 1:
-            url = sys.argv[1]
-        else:
-            url = "http://localhost"
+        url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost"
 
         self.browser.get(url)
         self.browser.save_screenshot("screenshot.png")
@@ -39,4 +33,4 @@ class AutTest(unittest.TestCase):
         self.assertIn(expected_result, actual_result.text)
 
 if __name__ == '__main__':
-    unittest.main(argv=['first-arg-is]()
+    unittest.main(argv=['first-arg-is-ignored'], verbosity=2, warnings='ignore')
