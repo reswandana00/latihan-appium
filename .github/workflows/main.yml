@@ -1,13 +1,16 @@
 name: OTF Testing
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
 jobs:
   test:
-    name: Functional Test
-    permissions: write-all
+    name: Functional Test (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [firefox, chrome, edge]
+
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v4
@@ -26,29 +29,29 @@ jobs:
           URL=http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
           echo "URL=$URL" >> $GITHUB_ENV
 
-      - name: Check AUT Url
-        run: curl ${{ env.URL }}
+      - name: Start Selenium (${{ matrix.browser }})
+        run: |
+          if [ "${{ matrix.browser }}" = "firefox" ]; then
+            IMAGE=selenium/standalone-firefox:latest
+          elif [ "${{ matrix.browser }}" = "chrome" ]; then
+            IMAGE=selenium/standalone-chrome:latest
+          else
+            IMAGE=selenium/standalone-edge:latest
+          fi
 
-      - name: Selenium Preparation
-        run: docker run --network=isolated -d -p 4444:4444 -p 7900:7900 -v /dev/shm:/dev/shm --name firefox-standalone selenium/standalone-firefox:latest
+          docker run --network=isolated -d \
+            -p 4444:4444 -p 7900:7900 \
+            -v /dev/shm:/dev/shm \
+            --name selenium-${{ matrix.browser }} $IMAGE
 
       - name: Wait for Selenium Hub
         run: sh wait.sh
-
-      - name: Check the Hub
-        run: curl http://localhost:4444/ui
 
       - name: Install Selenium client
         run: pip install -U selenium
 
       - name: Run test
-        run: python tests/hello_aut.py ${{ env.URL }}
-
-      - name: "Upload Artifact"
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshot
-          path: screenshot.png
+        run: python tests/hello_aut.py ${{ env.URL }} ${{ matrix.browser }}
 
       - name: stop docker
         run: docker stop docker-apache
